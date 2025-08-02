@@ -1,13 +1,19 @@
 package application
 
 import (
-	"log"
 	"github.com/spf13/viper"
+	"log"
 )
 
 type Env struct {
-	R_IP 	string  `mapstructure:"R_IP"`
-	R_PORT	int 	`mapstructure:"R_PORT"`
+	Ip       string `mapstructure:"R_IP"`
+	Port     int    `mapstructure:"R_PORT"`
+	DbHost   string `mapstructure:"R_DB_HOST"`
+	DbPort   int    `mapstructure:"R_DB_PORT"`
+	DbUser   string `mapstructure:"R_DB_USER"`
+	DbPswd   string `mapstructure:"R_DB_PSWD"`
+	DbName   string `mapstructure:"R_DB_NAME"`
+	MusicDir string `mapstructure:"R_MUSIC_DIR"`
 }
 
 var env *Env
