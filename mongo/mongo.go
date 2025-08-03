@@ -14,12 +14,12 @@ type Database interface {
 }
 
 type Collection interface {
-	// FindOne(context.Context, interface{}) *mongo.SingleResult
-	// Find(context.Context, interface{}) (*mongo.Cursor, error)
-	// InsertOne(context.Context, interface{}) (*mongo.InsertOneResult, error)
-	// Insert(context.Context, []interface{}) (*mongo.InsertManyResult, error)
-	// UpdateOne(context.Context, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
-	// Update(context.Context, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	FindOne(context.Context, interface{}) *mongo.SingleResult
+	Find(context.Context, interface{}) (*mongo.Cursor, error)
+	InsertOne(context.Context, interface{}) (*mongo.InsertOneResult, error)
+	Insert(context.Context, []interface{}) (*mongo.InsertManyResult, error)
+	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	Update(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
 	DeleteOne(context.Context, interface{}) (int64, error)
 }
 
@@ -74,6 +74,30 @@ func (mc *mongoClient) Ping(ctx context.Context) error {
 
 func (mc *mongoClient) Disconnect(ctx context.Context) error {
 	return mc.client.Disconnect(ctx)
+}
+
+func (mc *mongoCollection) FindOne(ctx context.Context, filter interface{}) *mongo.SingleResult {
+	return mc.collection.FindOne(ctx, filter)
+}
+
+func (mc *mongoCollection) Find(ctx context.Context, filter interface{}) (*mongo.Cursor, error) {
+	return mc.collection.Find(ctx, filter)
+}
+
+func (mc *mongoCollection) InsertOne(ctx context.Context, document interface{}) (*mongo.InsertOneResult, error) {
+	return mc.collection.InsertOne(ctx, document)
+}
+
+func (mc *mongoCollection) Insert(ctx context.Context, document []interface{}) (*mongo.InsertManyResult, error) {
+	return mc.collection.InsertMany(ctx, document)
+}
+
+func (mc *mongoCollection) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return mc.collection.UpdateOne(ctx, filter, update, opts...)
+}
+
+func (mc *mongoCollection) Update(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+	return mc.collection.UpdateMany(ctx, filter, update, opts...)
 }
 
 func (mc *mongoCollection) DeleteOne(ctx context.Context, filter interface{}) (int64, error) {

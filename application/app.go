@@ -1,8 +1,6 @@
 package application
 
 import (
-	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/rekaime/r-mio/cmd"
 	"github.com/rekaime/r-mio/mongo"
 )
@@ -34,19 +32,8 @@ func App() *Application {
 	return app
 }
 
-func endOfAppRunning() {
+func EndOfAppRunning() {
 	for _, cancel := range appCancelQueue {
 		cancel()
 	}
-}
-
-func (app *Application) Run() {
-	defer endOfAppRunning()
-
-	db := app.DbClient.Database(env.DbName)
-
-	router := gin.Default()
-
-	env := app.Env
-	router.Run(fmt.Sprintf("%s:%d", env.Ip, env.Port))
 }
