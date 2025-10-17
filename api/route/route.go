@@ -1,10 +1,10 @@
 package route
 
 import (
-	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/rekaime/r-mio/application"
 	"github.com/rekaime/r-mio/mongo"
+	"time"
 )
 
 func Run(gin *gin.Engine, env *application.Env, db mongo.Database, timeout time.Duration) {

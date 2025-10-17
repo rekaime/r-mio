@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"time"
-	"github.com/rekaime/r-mio/application"
 	"github.com/gin-gonic/gin"
 	"github.com/rekaime/r-mio/api/route"
+	"github.com/rekaime/r-mio/application"
+	"time"
 )
 
 func main() {

@@ -24,10 +24,10 @@ func App() *Application {
 
 	app.Env = NewEnv()
 	app.Cmd = cmd.NewCmd()
-	db, dbCancel := NewMongo(app.Env)
-	app.DbClient = db
+	dbClient, dbClientCancel := NewMongoClient(app.Env)
+	app.DbClient = dbClient
 
-	appCancelQueue = append(appCancelQueue, dbCancel)
+	appCancelQueue = append(appCancelQueue, dbClientCancel)
 
 	return app
 }

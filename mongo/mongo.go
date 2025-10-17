@@ -29,9 +29,6 @@ type Client interface {
 	Disconnect(ctx context.Context) error
 }
 
-type Cursor interface {
-}
-
 type mongoDatabase struct {
 	database *mongo.Database
 }
