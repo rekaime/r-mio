@@ -7,3 +7,4 @@
 *.test
 *.out
 *.exe
+*_test.go
