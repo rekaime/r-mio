@@ -34,7 +34,6 @@ func NewEnv() *Env {
 	if err != nil {
 		log.Fatal("Environment can't be loaded: ", err)
 	}
-	log.Println(env)
 
 	return env
 }

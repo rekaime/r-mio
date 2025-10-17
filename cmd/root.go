@@ -2,6 +2,9 @@ package cmd
 
 import (
 	"log"
+	"path/filepath"
+	"os"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,17 +21,47 @@ var root = &cobra.Command{
 	Run:   defaultCmd,
 }
 
-func init () {
+func init() {
 	defaultInit(root)
 }
 
 func defaultInit(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&command.Dir, "dir", "d", "", "provide a directory where save audio files")
-	cmd.MarkFlagRequired("dir")
+	err := cmd.MarkFlagRequired("dir")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func validateDir(dir string) string {
+	isAbs := filepath.IsAbs(dir)
+	if !isAbs {
+		return ""
+	}
+
+	cleanPath, err := filepath.Abs(filepath.Clean(dir))
+	if err != nil {
+		return ""
+	}
+
+	_, err = os.Stat(cleanPath)
+	if err == nil {
+		return cleanPath
+	}
+	
+	return ""
 }
 
 func defaultCmd(cmd *cobra.Command, args []string) {
 	dir, _ := cmd.Flags().GetString("dir")
+	dir = validateDir(dir)
+	if dir == "" {
+		log.Fatal("dir is invalid")
+	}
+	err := cmd.Flags().Set("dir", dir)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Printf("mio is reading \"%s\"\n", dir)
 }
 

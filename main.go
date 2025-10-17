@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"github.com/gin-gonic/gin"
 	"github.com/rekaime/r-mio/api/route"
 	"github.com/rekaime/r-mio/application"
@@ -19,6 +20,9 @@ func main() {
 	ginEngine := gin.Default()
 	timeout := time.Duration(3) * time.Second
 
-	route.Run(ginEngine, env, db, timeout)
-	ginEngine.Run(fmt.Sprintf("%s:%d", env.Ip, env.Port))
+	route.InitRouter(ginEngine, env, db, timeout)
+	err := ginEngine.Run(fmt.Sprintf("%s:%d", env.Ip, env.Port))
+	if err != nil {
+		log.Fatal(err)
+	}
 }

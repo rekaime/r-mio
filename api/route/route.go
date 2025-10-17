@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func Run(gin *gin.Engine, env *application.Env, db mongo.Database, timeout time.Duration) {
+func InitRouter(gin *gin.Engine, env *application.Env, db mongo.Database, timeout time.Duration) {
 	publicRoute := gin.Group("/api")
 	NewMusicRoute(publicRoute, env, db, timeout)
 }
