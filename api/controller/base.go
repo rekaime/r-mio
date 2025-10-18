@@ -6,7 +6,7 @@ import (
     "net/http"
 )
 
-func Success(ctx *gin.Context, data interface{}) {
+func Success(ctx *gin.Context, data any) {
 	ctx.JSON(http.StatusOK, response.Success(data))
 }
 

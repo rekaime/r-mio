@@ -20,7 +20,7 @@ func main() {
 	ginEngine := gin.Default()
 	timeout := time.Duration(3) * time.Second
 
-	route.InitRouter(ginEngine, env, db, timeout)
+	route.InitRouter(ginEngine, app, db, timeout)
 	err := ginEngine.Run(fmt.Sprintf("%s:%d", env.Ip, env.Port))
 	if err != nil {
 		log.Fatal(err)

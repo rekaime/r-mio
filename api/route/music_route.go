@@ -16,4 +16,5 @@ func NewMusicRoute(group *gin.RouterGroup, env *application.Env, db mongo.Databa
 	controller := controller.NewMusicController(service)
 	group.GET("/music-list", controller.GetMusicList)
 	group.GET("/music/:id", controller.GetMusicById)
+	group.POST("/music/handle-download", controller.HandleDownloadMusic)
 }

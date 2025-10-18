@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -13,14 +14,18 @@ type Database interface {
 	Client() Client
 }
 
+type SingleResult interface {
+	Decode(any) error
+}
+
 type Collection interface {
-	FindOne(context.Context, interface{}) *mongo.SingleResult
-	Find(context.Context, interface{}) (*mongo.Cursor, error)
-	InsertOne(context.Context, interface{}) (*mongo.InsertOneResult, error)
-	Insert(context.Context, []interface{}) (*mongo.InsertManyResult, error)
-	UpdateOne(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
-	Update(context.Context, interface{}, interface{}, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
-	DeleteOne(context.Context, interface{}) (int64, error)
+	FindOne(context.Context, any) SingleResult
+	Find(context.Context, any) (*mongo.Cursor, error)
+	InsertOne(context.Context, any) (*mongo.InsertOneResult, error)
+	Insert(context.Context, []any) (*mongo.InsertManyResult, error)
+	UpdateOne(context.Context, any, any, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	Update(context.Context, any, any, ...*options.UpdateOptions) (*mongo.UpdateResult, error)
+	DeleteOne(context.Context, any) (int64, error)
 }
 
 type Client interface {
@@ -39,6 +44,10 @@ type mongoCollection struct {
 
 type mongoClient struct {
 	client *mongo.Client
+}
+
+type mongoSingleResult struct {
+	singleResult *mongo.SingleResult
 }
 
 func (md *mongoDatabase) Collection(colName string) Collection {
@@ -73,31 +82,35 @@ func (mc *mongoClient) Disconnect(ctx context.Context) error {
 	return mc.client.Disconnect(ctx)
 }
 
-func (mc *mongoCollection) FindOne(ctx context.Context, filter interface{}) *mongo.SingleResult {
-	return mc.collection.FindOne(ctx, filter)
+func (mc *mongoCollection) FindOne(ctx context.Context, filter any) SingleResult {
+	return &mongoSingleResult{mc.collection.FindOne(ctx, filter)}
 }
 
-func (mc *mongoCollection) Find(ctx context.Context, filter interface{}) (*mongo.Cursor, error) {
+func (mc *mongoCollection) Find(ctx context.Context, filter any) (*mongo.Cursor, error) {
 	return mc.collection.Find(ctx, filter)
 }
 
-func (mc *mongoCollection) InsertOne(ctx context.Context, document interface{}) (*mongo.InsertOneResult, error) {
+func (mc *mongoCollection) InsertOne(ctx context.Context, document any) (*mongo.InsertOneResult, error) {
 	return mc.collection.InsertOne(ctx, document)
 }
 
-func (mc *mongoCollection) Insert(ctx context.Context, document []interface{}) (*mongo.InsertManyResult, error) {
+func (mc *mongoCollection) Insert(ctx context.Context, document []any) (*mongo.InsertManyResult, error) {
 	return mc.collection.InsertMany(ctx, document)
 }
 
-func (mc *mongoCollection) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (mc *mongoCollection) UpdateOne(ctx context.Context, filter any, update any, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
 	return mc.collection.UpdateOne(ctx, filter, update, opts...)
 }
 
-func (mc *mongoCollection) Update(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
+func (mc *mongoCollection) Update(ctx context.Context, filter any, update any, opts ...*options.UpdateOptions) (*mongo.UpdateResult, error) {
 	return mc.collection.UpdateMany(ctx, filter, update, opts...)
 }
 
-func (mc *mongoCollection) DeleteOne(ctx context.Context, filter interface{}) (int64, error) {
+func (mc *mongoCollection) DeleteOne(ctx context.Context, filter any) (int64, error) {
 	deleteResult, err := mc.collection.DeleteOne(ctx, filter)
 	return deleteResult.DeletedCount, err
+}
+
+func (mr *mongoSingleResult) Decode(v any) error {
+	return mr.singleResult.Decode(v)
 }

@@ -8,6 +8,7 @@ import (
 type MusicController interface {
 	GetMusicList(ctx *gin.Context)
 	GetMusicById(ctx *gin.Context)
+	HandleDownloadMusic(ctx *gin.Context)
 }
 
 type musicController struct {
@@ -31,6 +32,15 @@ func (controller *musicController) GetMusicById(ctx *gin.Context) {
 		return
 	}
 	Success(ctx, music)
+}
+
+func (controller *musicController) HandleDownloadMusic(ctx *gin.Context) {
+	err := controller.musicService.HandleDownloadMusic()
+	if err != nil {
+		InternalError(ctx)
+		return
+	}
+	Success(ctx, nil)
 }
 
 func NewMusicController(musicService service.MusicService) MusicController {
