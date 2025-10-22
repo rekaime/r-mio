@@ -1,8 +1,8 @@
 package controller
 
 import (
-	"github.com/rekaime/r-mio/api/service"
 	"github.com/gin-gonic/gin"
+	"github.com/rekaime/r-mio/api/service"
 )
 
 type MusicController interface {
@@ -12,7 +12,8 @@ type MusicController interface {
 }
 
 type musicController struct {
-	musicService service.MusicService
+	musicService  service.MusicService
+	configService service.ConfigService
 }
 
 func (controller *musicController) GetMusicList(ctx *gin.Context) {
@@ -43,6 +44,14 @@ func (controller *musicController) HandleDownloadMusic(ctx *gin.Context) {
 	Success(ctx, nil)
 }
 
-func NewMusicController(musicService service.MusicService) MusicController {
-	return &musicController{musicService}
+type Params struct {
+	MusicService  service.MusicService
+	ConfigService service.ConfigService
+}
+
+func NewMusicController(params Params) MusicController {
+	return &musicController{
+		musicService:  params.MusicService,
+		configService: params.ConfigService,
+	}
 }
