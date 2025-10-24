@@ -1,8 +1,8 @@
 package service
 
 import (
-	"io"
 	"log"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,7 +21,7 @@ type MusicService interface {
 	getMusicMetadata(string) (*repository.Music, error)
 	moveMusicFile(string, string) error
 	ReadLocalMusicCover(string) ([]byte, error)
-	ReadLocalMusic(string) (io.ReadSeekCloser, error)
+	ReadLocalMusic(string) (*os.File, error)
 }
 
 type musicService struct {
@@ -34,10 +34,17 @@ func (service *musicService) GetMusicList() ([]string, error) {
 	return service.musicRepository.GetIdList(ctx)
 }
 
-func (service *musicService) GetMusicById(id string) (*repository.Music, error) {
+func (service *musicService) GetMusicById(id string) (music *repository.Music, err error) {
 	ctx, cancel := rcontext.CreateTimeoutContext()
 	defer cancel()
-	return service.musicRepository.FindById(ctx, id)
+	music, err = service.musicRepository.FindById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if music == nil {
+		return nil, fmt.Errorf("music [%s] not found", id)
+	}
+	return
 }
 
 func (service *musicService) HasMusic(name string) bool {
@@ -187,10 +194,10 @@ func (service *musicService) ReadLocalMusicCover(path string) (cover []byte, err
 
 	cover = tg.Picture().Data
 	
-	return cover, nil
+	return
 }
 
-func (service *musicService) ReadLocalMusic(path string) (io.ReadSeekCloser, error) {
+func (service *musicService) ReadLocalMusic(path string) (*os.File, error) {
 	return os.Open(path)
 }
 

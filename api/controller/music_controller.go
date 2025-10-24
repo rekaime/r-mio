@@ -44,10 +44,6 @@ func (controller *musicController) GetMusicInfoById(ctx *gin.Context) {
 		InternalError(ctx)
 		return
 	}
-	if music == nil {
-		Success(ctx, nil)
-		return
-	}
 
 	Success(ctx, *music)
 }
@@ -57,10 +53,6 @@ func (controller *musicController) GetMusicFileById(ctx *gin.Context) {
 	music, err := controller.musicService.GetMusicById(id)
 	if err != nil {
 		InternalError(ctx)
-		return
-	}
-	if music == nil {
-		Success(ctx, nil)
 		return
 	}
 
@@ -84,10 +76,6 @@ func (controller *musicController) GetMusicCoverById(ctx *gin.Context) {
 	music, err := controller.musicService.GetMusicById(id)
 	if err != nil {
 		InternalError(ctx)
-		return
-	}
-	if music == nil {
-		Success(ctx, nil)
 		return
 	}
 
