@@ -9,6 +9,10 @@ import (
 	"time"
 )
 
+var (
+	ErrNoDocuments = mongo.ErrNoDocuments
+)
+
 type Database interface {
 	Collection(string) Collection
 	Client() Client

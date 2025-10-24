@@ -1,24 +1,27 @@
 package service
 
 import (
+	"io"
+	"log"
+	"os"
 	"path/filepath"
 	"strings"
-	"os"
-	"log"
 
 	"github.com/dhowden/tag"
-	"github.com/rekaime/r-mio/internal/utils/r-context"
 	"github.com/rekaime/r-mio/api/repository"
+	rcontext "github.com/rekaime/r-mio/internal/utils/r-context"
 )
 
 type MusicService interface {
 	GetMusicList() ([]string, error)
-	GetMusicById(id string) (*repository.Music, error)
-	HasMusic(name string) bool
-	HandleDownloadMusic() error
-	getDownloadMusicFilepath() ([]string, error)
-	getMusicMetadata(path string) (*repository.Music, error)
-	moveMusicFile(path string) error
+	GetMusicById(string) (*repository.Music, error)
+	HasMusic(string) bool
+	HandleDownloadMusic(MusicDir string, MusicDownloadDir string) error
+	getDownloadMusicFilepath(string) ([]string, error)
+	getMusicMetadata(string) (*repository.Music, error)
+	moveMusicFile(string, string) error
+	ReadLocalMusicCover(string) ([]byte, error)
+	ReadLocalMusic(string) (io.ReadSeekCloser, error)
 }
 
 type musicService struct {
@@ -49,11 +52,11 @@ func (service *musicService) HasMusic(name string) bool {
 }
 
 // 尝试将下载目录下的音频文件移动到音乐目录 同时入库
-func (service *musicService) HandleDownloadMusic() error {
+func (service *musicService) HandleDownloadMusic(MusicDir string, MusicDownloadDir string) error {
 	ctx, cancel := rcontext.CreateTimeoutContext()
 	defer cancel()
 
-	audioFiles, err := service.getDownloadMusicFilepath()
+	audioFiles, err := service.getDownloadMusicFilepath(MusicDownloadDir)
 	if err != nil {
 		return err
 	}
@@ -73,15 +76,20 @@ func (service *musicService) HandleDownloadMusic() error {
 			continue
 		}
 
-		err = service.musicRepository.InsertOne(ctx, info)
+		id, err := service.musicRepository.InsertOne(ctx, info)
 		if err != nil {
 			log.Printf("HandleDownloadMusic(2): %v\n", err)
 			continue
 		}
 
-		err = service.moveMusicFile(filePath)
+		destPath := filepath.Join(MusicDir, id)
+		err = service.moveMusicFile(filePath, destPath)
 		if err != nil {
 			log.Printf("HandleDownloadMusic(3): %s\n=> err: %v\n", filePath, err)
+			err = service.musicRepository.DeleteOne(ctx, id)
+			if err != nil {
+				log.Printf("HandleDownloadMusic(4): %v\n", err)
+			}
 			continue
 		}
 	}
@@ -89,7 +97,7 @@ func (service *musicService) HandleDownloadMusic() error {
 }
 
 // 获取下载目录下的所有音频
-func (service *musicService) getDownloadMusicFilepath() ([]string, error) {
+func (service *musicService) getDownloadMusicFilepath(musicDownloadFileDir string) ([]string, error) {
 	var audioFiles []string
 	audioExtensions := map[string]bool{
 		".mp3":  true,
@@ -100,7 +108,7 @@ func (service *musicService) getDownloadMusicFilepath() ([]string, error) {
 		".aac":  true,
 	}
 
-	entries, err := os.ReadDir(repository.MusicDownloadFileDir)
+	entries, err := os.ReadDir(musicDownloadFileDir)
 	if err != nil {
 		return audioFiles, err
 	}
@@ -110,7 +118,7 @@ func (service *musicService) getDownloadMusicFilepath() ([]string, error) {
 			continue
 		}
 
-		path := filepath.Join(repository.MusicDownloadFileDir, entry.Name())
+		path := filepath.Join(musicDownloadFileDir, entry.Name())
 
 		ext := strings.ToLower(filepath.Ext(path))
 		if audioExtensions[ext] {
@@ -150,7 +158,7 @@ func (service *musicService) getMusicMetadata(path string) (*repository.Music, e
 	if info.Item.Title == "" {
 		info.Item.Title = strings.TrimSuffix(filepath.Base(path), info.Item.FileType)
 	}
-	
+
 	split := "/"
 	info.Item.Artist = strings.Split(tg.Artist(), split)
 	info.Item.Composer = strings.Split(tg.Composer(), split)
@@ -161,10 +169,29 @@ func (service *musicService) getMusicMetadata(path string) (*repository.Music, e
 	return &info, nil
 }
 
-func (service *musicService) moveMusicFile(path string) error {
-	basename := filepath.Base(path)
-	newPath := filepath.Join(repository.MusicFileDir, basename)
-	return os.Rename(path, newPath)
+func (service *musicService) moveMusicFile(originPath string, destPath string) error {
+	return os.Rename(originPath, destPath)
+}
+
+func (service *musicService) ReadLocalMusicCover(path string) (cover []byte, err error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	tg, err := tag.ReadFrom(f)
+	if err != nil {
+		return nil, err
+	}
+
+	cover = tg.Picture().Data
+	
+	return cover, nil
+}
+
+func (service *musicService) ReadLocalMusic(path string) (io.ReadSeekCloser, error) {
+	return os.Open(path)
 }
 
 func NewMusicService(musicRepository repository.MusicRepository) MusicService {
